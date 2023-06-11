@@ -1,1 +1,0 @@
-# cnv-project-aws
