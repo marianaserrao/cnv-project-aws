@@ -12,6 +12,6 @@ java -cp aws/aws-sdk/lib/aws-java-sdk-1.12.486.jar:aws/aws-sdk/third-party/lib/*
 4. The AWS CLI must be in PATH
 
 ## How to Run 
-javac -cp aws/aws-sdk/lib/aws-java-sdk-1.12.486.jar:aws/aws-sdk/third-party/lib/*:. autoscaler/ManageEC2.java 
+javac -cp aws/aws-sdk/lib/aws-java-sdk-1.12.486.jar:aws/aws-sdk/third-party/lib/*:. autoscaler/*.java 
 
-java -cp aws/aws-sdk/lib/aws-java-sdk-1.12.486.jar:aws/aws-sdk/third-party/lib/*:. autoscaler.ManageEC2
+java -cp aws/aws-sdk/lib/aws-java-sdk-1.12.486.jar:aws/aws-sdk/third-party/lib/*:. autoscaler.AutoScaler

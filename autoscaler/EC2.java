@@ -12,6 +12,8 @@ import com.amazonaws.services.ec2.model.RunInstancesRequest;
 import com.amazonaws.services.ec2.model.RunInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
+import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 
 public class EC2 {
   private static String AWS_REGION = "us-east-1";
@@ -24,7 +26,7 @@ public class EC2 {
               .withCredentials(new EnvironmentVariableCredentialsProvider())
               .build();
 
-  public static Instance launchInstance() throws Exception{
+  static Instance launchInstance() throws Exception{
     try {             
       System.out.println("Starting a new instance.");
       RunInstancesRequest runInstancesRequest = new RunInstancesRequest();
@@ -46,7 +48,7 @@ public class EC2 {
     }
   }
   
-  public static void terminateInstance(String instanceID) throws Exception{
+  static void terminateInstance(String instanceID) throws Exception{
     try{
         System.out.println("Terminating instance "+instanceID);
         TerminateInstancesRequest termInstanceReq = new TerminateInstancesRequest();
@@ -60,11 +62,24 @@ public class EC2 {
     }    
   }  
   
-  private static Set<Instance> getInstances() throws Exception {
+  static Set<Instance> getAllInstances() throws Exception {
     Set<Instance> instances = new HashSet<Instance>();
     for (Reservation reservation : ec2.describeInstances().getReservations()) {
         instances.addAll(reservation.getInstances());
     }
     return instances;
+  }
+
+  static Instance getInstance(String instanceId) {
+        DescribeInstancesRequest request = new DescribeInstancesRequest()
+                .withInstanceIds(instanceId);
+        DescribeInstancesResult response = ec2.describeInstances(request);
+        Reservation reservation = response.getReservations().get(0);
+        Instance instance = reservation.getInstances().get(0);
+    return instance;
+  }
+
+  static String getAWSRegion(){
+    return AWS_REGION;
   }
 }
