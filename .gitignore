@@ -1,0 +1,8 @@
+aws/*
+
+.vscode
+
+*.sh
+*.pem
+
+!.gitkeep
