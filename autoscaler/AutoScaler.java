@@ -28,8 +28,8 @@ import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 
 public class AutoScaler {
     private static long OBS_TIME = 1000 * 60 * 20;
-    private static long ITERATION_TIME = 1000 * 60 * 1;
-    private static double MAX_CPU = 10;
+    private static long ITERATION_TIME = 1000 * 60 * 20;
+    private static double MAX_CPU = 70;
     private static double MIN_CPU = 5;
 
     private static AmazonCloudWatch cloudWatch = AmazonCloudWatchClientBuilder.standard()
@@ -68,6 +68,8 @@ public class AutoScaler {
     private static void scaleInstances() throws Exception{
         try {
             terminateUnusedInstances();
+            pendingInstances.clear();
+            runningInstances.clear();
 
             Set<Instance> instances = EC2.getAllInstances();
             Dimension instanceDimension = new Dimension();
@@ -83,21 +85,26 @@ public class AutoScaler {
                 String state = instance.getState().getName();
                 if (state.equals("running")) { 
                     System.out.println();
-                    instanceCount+=1;
                     double iCPUMeanUtilization = getInstanceMeanCPUUtilization(iid, instanceDimension);                
-                    CPUUtilizationSum+=iCPUMeanUtilization;
                     System.out.println(iid+ " CPU Utilization: " + iCPUMeanUtilization);
+                    runningInstances.put(iid, new Object[]{instance, iCPUMeanUtilization});
+                    CPUUtilizationSum+=iCPUMeanUtilization;
+                    instanceCount+=1;
                     if (iCPUMeanUtilization<=MIN_CPU){
                         System.out.println("Low CPU Utilization");
                         unusedInstances.add(instance.getInstanceId());
                     }
+                }else if(state.equals("pending")){
+                    pendingInstances.add(iid);
                 }
             }
             double CPUUtilizationMean = CPUUtilizationSum/instanceCount;
-            if(CPUUtilizationMean>=MAX_CPU && pendingInstances.size()==0 && unusedInstances.size()==0){
+            if((MAX_CPU-CPUUtilizationMean)/10 > pendingInstances.size() && unusedInstances.size()==0){
                 System.out.println("High CPU Utiization");
-                System.out.println(pendingInstances.size());
-                handleInstanceLaunch();
+                int launches = (int) Math.ceil((MAX_CPU-CPUUtilizationMean)/10)-pendingInstances.size();
+                for (int i = 0; i < launches; i++) {
+                    handleInstanceLaunch();
+                }
             }else if(CPUUtilizationMean<MAX_CPU){
                 for(String instanceId: unusedInstances){
                     setInstanceTermination(instanceId);
@@ -156,23 +163,10 @@ public class AutoScaler {
     }
 
     public static void main(String[] args) throws Exception{
-        // handles preexisting instances
-        Set<Instance> instances = EC2.getAllInstances();
-        for (Instance instance: instances){
-            if(instanceIsRunning(instance)){
-                runningInstances.put(instance.getInstanceId(), new Object[]{instance, null});
-            }else if(instance.getState().getName()=="pending"){
-                pendingInstances.add(instance.getInstanceId());
-            }
-        }
-        // create new intances
-        if(runningInstances.size()<2){
-            handleInstanceLaunch();
-            handleInstanceLaunch();
-        }
+        // create first intance
+        handleInstanceLaunch();
         // autoscales
-        while(runningInstances.size()>0 || pendingInstances.size()>0){       
-            checkPendingInstances();
+        while(runningInstances.size()>0 || pendingInstances.size()>0){      
             scaleInstances();
             
             System.out.println("\ninstances to terminate: "+instancesToTerminate);
