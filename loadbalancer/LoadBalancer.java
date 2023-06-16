@@ -319,6 +319,8 @@ public class LoadBalancer {
                 closestEntry = null;
                 closestDifference = Double.POSITIVE_INFINITY;
 
+                //CALCULATE REQUEST COST
+
                 for (MetricsEntry entry : simulateMetrics) {
                     double difference = Math.abs(entry.generations - generations) + Math.abs(Double.parseDouble(entry.world) - world) + Math.abs(Double.parseDouble(entry.scenario) - scenario);
 
@@ -353,6 +355,8 @@ public class LoadBalancer {
                 closestEntry = null;
                 closestDifference = Double.POSITIVE_INFINITY;
 
+                //CALCULATE REQUEST COST
+
                 for (MetricsEntry entry : insectWarMetrics) {
                     double difference = (entry.max - max) + (entry.army1 - army1) + (entry.army2 - army2);
 
@@ -381,7 +385,12 @@ public class LoadBalancer {
         // Retrieve the instances from the autoscaler
         Map<String, Object[]> allInstances = AutoScaler.getRunningInstances();
 
+
+        //TODO CHOOSE WHETHER TO SEND TO LAMBDA OR DO PREVIOUS CODE 
+
         // Case in which we use a lambda
+
+
 
         // Case in which we select an instance
         // SELECT INSTANCE WITH LOWEST ACCUMULATED COST
@@ -558,6 +567,8 @@ public class LoadBalancer {
             return;
         }
 
+
+
         // Retrieve the instances from the autoscaler
         Map<String, Object[]> allInstances = AutoScaler.getRunningInstances();
         
@@ -565,6 +576,8 @@ public class LoadBalancer {
 
         MetricsEntry closestEntry = null;
         double closestDifference = Double.POSITIVE_INFINITY;
+
+        //Calculate request cost
 
         for (MetricsEntry entry : compressImageMetrics) {
             double difference = Math.abs(entry.width - Double.parseDouble(width))
@@ -591,6 +604,11 @@ public class LoadBalancer {
                 requestCost = closestEntry.complexity*0.85;
             }
         }
+
+
+        //TODO CHOOSE LAMBDA OR EXECUTE THE REST OF THE CODE
+
+        
 
         // Case in which we use a lambda
 

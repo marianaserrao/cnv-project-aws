@@ -1,9 +1,9 @@
 #!/bin/bash
 
-IP="54.158.120.217"
+IP="3.238.221.192"
 PORT="8000"
 URL="http://$IP:$PORT/simulate?generations=3&world=3&scenario=3"
-REQUEST_COUNT=2000
+REQUEST_COUNT=5
 
 echo $URL
 
