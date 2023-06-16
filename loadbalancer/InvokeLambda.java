@@ -12,13 +12,13 @@ public class InvokeLambda {
 
     public static void invokeFunction(String requestType) {
 
-        String functionName = "simulation-lambda";
+        String functionName = "simulate-lambda";
         AWSLambda awsLambda = AWSLambdaClientBuilder.standard()
                 .withCredentials(new EnvironmentVariableCredentialsProvider())
                 .build();
 
         try {
-            String json = "{\"number\":\"10\"}";
+            String json = "{\"generations\":\"10\", \"world\":\"2\", \"scenario\":\"1\"}";
 
             InvokeRequest request = new InvokeRequest()
                     .withFunctionName(functionName)

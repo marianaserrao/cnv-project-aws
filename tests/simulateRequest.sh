@@ -1,14 +1,19 @@
 #!/bin/bash
 
-IP="3.238.221.192"
+IP="localhost"
 PORT="8000"
-URL="http://$IP:$PORT/simulate?generations=3&world=3&scenario=3"
-REQUEST_COUNT=5
+REQUEST_COUNT=100
 
-echo $URL
+echo "Generating random values..."
 
 for ((i=1; i<=REQUEST_COUNT; i++))
 do
-  echo "Sending request $i"
+  GENERATIONS=$((RANDOM % (100 - 1 + 1) + 1))
+  WORLD=$((RANDOM % (4 - 1 + 1) + 1))
+  SCENARIO=$((RANDOM % (3 - 1 + 1) + 1))
+  
+  URL="http://$IP:$PORT/simulate?generations=$GENERATIONS&world=$WORLD&scenario=$SCENARIO"
+
+  echo "Sending request $i: $URL"
   curl -X GET $URL
 done

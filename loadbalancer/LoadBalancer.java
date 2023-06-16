@@ -68,12 +68,15 @@ import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.services.dynamodbv2.util.TableUtils;
 
-// import software.amazon.awssdk.services.lambda.LambdaClient;
-// import software.amazon.awssdk.services.lambda.model.InvokeRequest;
-// import software.amazon.awssdk.core.SdkBytes;
-// import software.amazon.awssdk.services.lambda.model.InvokeResponse;
-// import software.amazon.awssdk.services.lambda.model.LambdaException;
-// import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
+import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.amazonaws.services.lambda.model.InvokeResult;
+import com.amazonaws.services.lambda.model.AWSLambdaException;
+import com.amazonaws.SdkClientException;
+
+import org.json.JSONObject;
 
 import autoscaler.AutoScaler;
 
@@ -240,40 +243,40 @@ public class LoadBalancer {
             simulateMetrics.add(entry);
         }
 
-        System.out.println("insectwar");
-        for (MetricsEntry entry : insectWarMetrics) {
-            System.out.println("Blocks: " + entry.nBlocks);
-            System.out.println("Methods: " + entry.nMethods);
-            System.out.println("Instructions: " + entry.nInstructions);
-            System.out.println("Max: " + entry.max);
-            System.out.println("Army1: " + entry.army1);
-            System.out.println("Army2: " + entry.army2);
-            System.out.println("Complexity: " + entry.complexity);
-            System.out.println(); // Print a blank line between entries
-        }
-        System.out.println("compressimage");
-        for (MetricsEntry entry : compressImageMetrics) {
-            System.out.println("Blocks: " + entry.nBlocks);
-            System.out.println("Methods: " + entry.nMethods);
-            System.out.println("Instructions: " + entry.nInstructions);
-            System.out.println("Width: " + entry.width);
-            System.out.println("Height: " + entry.height);
-            System.out.println("TargetFormat: " + entry.targetFormat);
-            System.out.println("Compression factor: " + entry.compressionFactor);
-            System.out.println("Complexity: " + entry.complexity);
-            System.out.println(); // Print a blank line between entries
-        }
-        System.out.println("simulate");
-        for (MetricsEntry entry : simulateMetrics) {
-            System.out.println("Blocks: " + entry.nBlocks);
-            System.out.println("Methods: " + entry.nMethods);
-            System.out.println("Instructions: " + entry.nInstructions);
-            System.out.println("World: " + entry.world);
-            System.out.println("Generations: " + entry.generations);
-            System.out.println("Scenario: " + entry.scenario);
-            System.out.println("Complexity: " + entry.complexity);
-            System.out.println(); // Print a blank line between entries
-        }
+        // System.out.println("insectwar");
+        // for (MetricsEntry entry : insectWarMetrics) {
+        //     System.out.println("Blocks: " + entry.nBlocks);
+        //     System.out.println("Methods: " + entry.nMethods);
+        //     System.out.println("Instructions: " + entry.nInstructions);
+        //     System.out.println("Max: " + entry.max);
+        //     System.out.println("Army1: " + entry.army1);
+        //     System.out.println("Army2: " + entry.army2);
+        //     System.out.println("Complexity: " + entry.complexity);
+        //     System.out.println(); // Print a blank line between entries
+        // }
+        // System.out.println("compressimage");
+        // for (MetricsEntry entry : compressImageMetrics) {
+        //     System.out.println("Blocks: " + entry.nBlocks);
+        //     System.out.println("Methods: " + entry.nMethods);
+        //     System.out.println("Instructions: " + entry.nInstructions);
+        //     System.out.println("Width: " + entry.width);
+        //     System.out.println("Height: " + entry.height);
+        //     System.out.println("TargetFormat: " + entry.targetFormat);
+        //     System.out.println("Compression factor: " + entry.compressionFactor);
+        //     System.out.println("Complexity: " + entry.complexity);
+        //     System.out.println(); // Print a blank line between entries
+        // }
+        // System.out.println("simulate");
+        // for (MetricsEntry entry : simulateMetrics) {
+        //     System.out.println("Blocks: " + entry.nBlocks);
+        //     System.out.println("Methods: " + entry.nMethods);
+        //     System.out.println("Instructions: " + entry.nInstructions);
+        //     System.out.println("World: " + entry.world);
+        //     System.out.println("Generations: " + entry.generations);
+        //     System.out.println("Scenario: " + entry.scenario);
+        //     System.out.println("Complexity: " + entry.complexity);
+        //     System.out.println(); // Print a blank line between entries
+        // }
     }
 
     private class RequestHandler implements HttpHandler {
@@ -334,7 +337,7 @@ public class LoadBalancer {
                         break;
                     }
                     if (closestEntry != null) {
-                    requestCost = closestEntry.complexity*0.85;
+                        requestCost = closestEntry.complexity*0.85;
                     }
                 }
 
@@ -389,104 +392,174 @@ public class LoadBalancer {
         //TODO CHOOSE WHETHER TO SEND TO LAMBDA OR DO PREVIOUS CODE 
 
         // Case in which we use a lambda
-
-
-
-        // Case in which we select an instance
-        // SELECT INSTANCE WITH LOWEST ACCUMULATED COST
-        String selectedInstanceId = null;
-        double minRequestsOccupation = Double.MAX_VALUE;
-
-        // Iterate over all instances and find the one with the lowest CPU utilization
-        for (Map.Entry<String, Object[]> entry : allInstances.entrySet()) {
-            String instanceId = entry.getKey();
-            Object[] instanceData = entry.getValue();
-
-            // Check if the instance data is valid 
-            if (instanceData != null && instanceData.length >= 1) {
-
-                double requestsOccupation = (double) instanceData[2];
-
-                // Update the selected instance if the accumulated cost is lower
-                if (requestsOccupation < minRequestsOccupation) {
-                    selectedInstanceId = instanceId;
-                    minRequestsOccupation = requestsOccupation;
-                }
-            }
-        }
-
-        System.out.println("Requests occupation of the instance with id = "  + selectedInstanceId + ": " + minRequestsOccupation);
-
-
-        //if we have no data request cost = 1000
-
-        if(requestCost==0){
-            requestCost = 1000;
-        }
-
-        // Retrieve the instance object from the map
-        Object[] instanceData = allInstances.get(selectedInstanceId);
-        System.out.println("Selected Instance cpu: " + instanceData[1]);
-        System.out.println("Selected instance costs: " + instanceData[2]);
-
-        if (instanceData != null && instanceData.length >= 1) {
-            Instance instance = (Instance) instanceData[0];
-            String ipAddress = instance.getPublicIpAddress();
-            System.out.println("Instance IP " + ipAddress);
-            int port = 8000; // Assuming the instance listens on port 8000
-
-            // Redirect the request to the selected instance
-            String url = "http://" + ipAddress + ":" + port + pseudoUrl;
-
-            // Update Instances List with current request cost
-            double currentCost = (double) instanceData[2];
-            double updatedCost = currentCost + requestCost;
-            instanceData[2] = updatedCost;
-            allInstances.put(selectedInstanceId, instanceData);
-            System.out.println("Cost before adding: " + currentCost);
-            System.out.println("Cost after adding: " + updatedCost);
+        
+        if(requestCost < 500000){
+            System.out.println("Entrou lambda");
+            String functionName;
+            AWSLambda awsLambda = AWSLambdaClientBuilder.standard()
+                    .withCredentials(new EnvironmentVariableCredentialsProvider())
+                    .build();
 
             try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-                connection.setRequestMethod("GET");
-                connection.connect();
-                System.out.println("Connected to: " + url);
+                JSONObject json = new JSONObject();
 
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    System.out.println("OK Response");
+                // Set parameter values
+                if(requestType.equals("simulation")){
+                    functionName = "simulate-lambda";
+                    json.put("generations", parameters.get("generations"));
+                    json.put("world", parameters.get("world"));
+                    json.put("scenario", parameters.get("scenario"));
+
+                    System.out.println("Entrou simulate");
+                    // Get the JSON string
+                    String jsonString = json.toString();
+
+                    InvokeRequest request = new InvokeRequest()
+                            .withFunctionName(functionName)
+                            .withPayload(jsonString);
+
+                    InvokeResult res = awsLambda.invoke(request);
+                    String value = new String(res.getPayload().array());
 
                     // Handle the successful response
-                    InputStream inputStream = connection.getInputStream();
-                    String responseData = readResponseData(inputStream);
-                    exchange.sendResponseHeaders(200, responseData.toString().length());
+                    exchange.sendResponseHeaders(200, value.length());
                     OutputStream os = exchange.getResponseBody();
-                    os.write(responseData.getBytes());
+                    os.write(value.getBytes());
                     os.close();
+                }
+                else if(requestType.equals("insectwar")){
+                    System.out.println("Entrou insectwar");
+                    functionName = "insectwar-lambda";
+                    json.put("max", parameters.get("max"));
+                    json.put("army1", parameters.get("army1"));
+                    json.put("army2", parameters.get("army2"));
 
-                    // Update Instances List after the request is done processing
-                    currentCost = (double) instanceData[2];
-                    updatedCost = currentCost - requestCost;
-                    instanceData[2] = updatedCost;
-                    allInstances.put(selectedInstanceId, instanceData);
-                    System.out.println("Cost after removing: " + updatedCost);
+                    // Get the JSON string
+                    String jsonString = json.toString();
 
-                } else {
-                    // Handle the failed response
+                    InvokeRequest request = new InvokeRequest()
+                            .withFunctionName(functionName)
+                            .withPayload(jsonString);
+
+                    InvokeResult res = awsLambda.invoke(request);
+                    String value = new String(res.getPayload().array());
+
+                    // Handle the successful response
+                    exchange.sendResponseHeaders(200, value.length());
+                    OutputStream os = exchange.getResponseBody();
+                    os.write(value.getBytes());
+                    os.close();
+                }
+
+            } catch (AWSLambdaException e) {
+                System.err.println(e.getMessage());
+                System.exit(1);
+            } catch (SdkClientException e) {
+                System.err.println("AWS service connection error: " + e.getMessage());
+                System.exit(1);
+            }
+
+            awsLambda.shutdown();
+        }
+        
+
+        else{
+            // Case in which we select an instance
+            // SELECT INSTANCE WITH LOWEST ACCUMULATED COST
+            String selectedInstanceId = null;
+            double minRequestsOccupation = Double.MAX_VALUE;
+
+            // Iterate over all instances and find the one with the lowest CPU utilization
+            for (Map.Entry<String, Object[]> entry : allInstances.entrySet()) {
+                String instanceId = entry.getKey();
+                Object[] instanceData = entry.getValue();
+
+                // Check if the instance data is valid 
+                if (instanceData != null && instanceData.length >= 1) {
+
+                    double requestsOccupation = (double) instanceData[2];
+
+                    // Update the selected instance if the accumulated cost is lower
+                    if (requestsOccupation < minRequestsOccupation) {
+                        selectedInstanceId = instanceId;
+                        minRequestsOccupation = requestsOccupation;
+                    }
+                }
+            }
+
+            System.out.println("Requests occupation of the instance with id = "  + selectedInstanceId + ": " + minRequestsOccupation);
+
+
+            //if we have no data request cost = 1000
+
+            if(requestCost==0){
+                requestCost = 1000;
+            }
+
+            // Retrieve the instance object from the map
+            Object[] instanceData = allInstances.get(selectedInstanceId);
+            System.out.println("Selected Instance cpu: " + instanceData[1]);
+            System.out.println("Selected instance costs: " + instanceData[2]);
+
+            if (instanceData != null && instanceData.length >= 1) {
+                Instance instance = (Instance) instanceData[0];
+                String ipAddress = instance.getPublicIpAddress();
+                System.out.println("Instance IP " + ipAddress);
+                int port = 8000; // Assuming the instance listens on port 8000
+
+                // Redirect the request to the selected instance
+                String url = "http://" + ipAddress + ":" + port + pseudoUrl;
+
+                // Update Instances List with current request cost
+                double currentCost = (double) instanceData[2];
+                double updatedCost = currentCost + requestCost;
+                instanceData[2] = updatedCost;
+                allInstances.put(selectedInstanceId, instanceData);
+                System.out.println("Cost before adding: " + currentCost);
+                System.out.println("Cost after adding: " + updatedCost);
+
+                try {
+                    HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.connect();
+                    System.out.println("Connected to: " + url);
+
+                    int responseCode = connection.getResponseCode();
+                    if (responseCode == HttpURLConnection.HTTP_OK) {
+                        System.out.println("OK Response");
+
+                        // Handle the successful response
+                        InputStream inputStream = connection.getInputStream();
+                        String responseData = readResponseData(inputStream);
+                        exchange.sendResponseHeaders(200, responseData.toString().length());
+                        OutputStream os = exchange.getResponseBody();
+                        os.write(responseData.getBytes());
+                        os.close();
+
+                        // Update Instances List after the request is done processing
+                        currentCost = (double) instanceData[2];
+                        updatedCost = currentCost - requestCost;
+                        instanceData[2] = updatedCost;
+                        allInstances.put(selectedInstanceId, instanceData);
+                        System.out.println("Cost after removing: " + updatedCost);
+
+                    } else {
+                        // Handle the failed response
+                        exchange.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
+                        exchange.getResponseBody().close();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                     exchange.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
                     exchange.getResponseBody().close();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
+            } 
+            else {
+                // Handle instance not found
+                exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, 0);
                 exchange.getResponseBody().close();
             }
-        } 
-        else {
-            // Handle instance not found
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, 0);
-            exchange.getResponseBody().close();
-        }
+            }
         }
     }
 
