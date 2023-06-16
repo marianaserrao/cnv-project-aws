@@ -17,7 +17,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 
 public class EC2 {
   private static String AWS_REGION = "us-east-1";
-  private static String AMI_ID = "ami-0189da5c270e2f478";
+  private static String AMI_ID = "ami-035f8b2394779eac2";
   private static String KEY_NAME = "cnv-aws";
   private static String SEC_GROUP_ID = "sg-0c5a7c7da31c8f941";
 
