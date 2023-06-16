@@ -4,6 +4,7 @@ local
 
 *.sh
 *.pem
+aws_cli
 
 !.gitkeep
 !tests/*

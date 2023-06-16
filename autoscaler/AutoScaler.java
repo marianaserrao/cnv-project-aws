@@ -87,7 +87,8 @@ public class AutoScaler {
                     System.out.println();
                     double iCPUMeanUtilization = getInstanceMeanCPUUtilization(iid, instanceDimension);                
                     System.out.println(iid+ " CPU Utilization: " + iCPUMeanUtilization);
-                    runningInstances.put(iid, new Object[]{instance, iCPUMeanUtilization});
+                    double requestsCost = 0;
+                    runningInstances.put(iid, new Object[]{instance, iCPUMeanUtilization, requestsCost});
                     CPUUtilizationSum+=iCPUMeanUtilization;
                     instanceCount+=1;
                     if (iCPUMeanUtilization<=MIN_CPU){
@@ -151,7 +152,8 @@ public class AutoScaler {
             String instanceID = iterator.next();
             Instance instance = EC2.getInstance(instanceID);
             if(instanceIsRunning(instance)){
-                runningInstances.put(instance.getInstanceId(), new Object[]{instance, null});
+                double requestsCost = 0;
+                runningInstances.put(instance.getInstanceId(), new Object[]{instance, null, requestsCost});
                 iterator.remove();
             }
         }        
