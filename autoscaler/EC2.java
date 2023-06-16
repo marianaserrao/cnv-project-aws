@@ -16,11 +16,11 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 
 public class EC2 {
-  private static String AWS_REGION = "us-east-1";
-  private static String AMI_ID = "ami-035f8b2394779eac2";
+  private static String AWS_REGION = System.getenv("AWS_DEFAULT_REGION");
+  private static String AMI_ID = System.getenv("DEFAULT_AMI_ID");
                                   	
-  private static String KEY_NAME = "awskeypair";
-  private static String SEC_GROUP_ID = "sg-06822412d9e588dd4";
+  private static String KEY_NAME = System.getenv("AWS_KEYPAIR_NAME");
+  private static String SEC_GROUP_ID = System.getenv("SEC_GROUP_ID");
 
   private static AmazonEC2 ec2 = AmazonEC2ClientBuilder.standard()
               .withRegion(AWS_REGION)
